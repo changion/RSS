@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情报订阅站 · 后台管理</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base:     #1E1F22;
+  --bg-sidebar:  #2B2D31;
+  --bg-main:     #313338;
+  --bg-card:     #383A40;
+  --bg-hover:    #35373C;
+  --bg-active:   #404249;
+  --text-1:      #DBDEE1;
+  --text-2:      #949BA4;
+  --text-3:      #6D6F78;
+  --accent:      #5865F2;
+  --accent-h:    #4752C4;
+  --green:       #23A55A;
+  --red:         #ED4245;
+  --yellow:      #F0B232;
+  --radius:      10px;
+  --transition:  .15s ease;
+}
+
+html, body { height: 100%; background: var(--bg-main); color: var(--text-1); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, sans-serif; display: flex; flex-direction: column; }
+
+/* ─── TOPNAV ─── */
+.topnav {
+  height: 54px; background: var(--bg-sidebar);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+  flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+}
+.topnav-brand { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+.topnav-badge { font-size: 11px; background: rgba(88,101,242,.2); color: #A5ADFF; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.topnav-spacer { flex: 1; }
+
+/* ─── TABS ─── */
+.tabs { display: flex; gap: 4px; padding: 16px 24px 0; }
+.tab-btn {
+  height: 36px; padding: 0 16px; border: none; border-radius: 8px 8px 0 0;
+  background: transparent; color: var(--text-2); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition);
+  border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { color: var(--text-1); background: rgba(255,255,255,.04); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── MAIN BODY ─── */
+.main-body { flex: 1; padding: 0 24px 28px; max-width: 1400px; width: 100%; margin: 0 auto; }
+.tab-panel { display: none; padding-top: 20px; }
+.tab-panel.active { display: block; }
+
+/* ─── SECTION CARD ─── */
+.section-card {
+  background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--radius); overflow: hidden;
+}
+.section-toolbar {
+  padding: 14px 18px; display: flex; gap: 10px; align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,.06); flex-wrap: wrap;
+}
+.toolbar-title { font-size: 14px; font-weight: 700; color: var(--text-1); flex-shrink: 0; }
+.toolbar-spacer { flex: 1; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  height: 34px; padding: 0 16px; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background var(--transition); white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); }
+.btn-ghost { background: rgba(255,255,255,.06); color: var(--text-2); border: 1px solid rgba(255,255,255,.08); }
+.btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text-1); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn-trigger { background: rgba(240,178,50,.15); color: var(--yellow); border: 1px solid rgba(240,178,50,.2); }
+.btn-trigger:hover { background: var(--yellow); color: #000; }
+.btn-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.btn-pipeline { background: rgba(35,165,90,.15); color: #3FD17B; border: 1px solid rgba(35,165,90,.2); }
+.btn-pipeline:hover { background: var(--green); color: #fff; }
+.btn-pipeline:disabled { opacity: .5; cursor: not-allowed; }
+.btn-edit { background: rgba(88,101,242,.15); color: #A5ADFF; }
+.btn-edit:hover { background: var(--accent); color: #fff; }
+.btn-del { background: rgba(237,66,69,.12); color: #F87171; }
+.btn-del:hover { background: var(--red); color: #fff; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left; padding: 10px 14px;
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  letter-spacing: .4px; text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  white-space: nowrap; background: var(--bg-sidebar);
+}
+tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); transition: background var(--transition); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.02); }
+tbody td { padding: 11px 14px; color: var(--text-1); vertical-align: middle; }
+.table-empty { padding: 60px 24px; text-align: center; color: var(--text-3); }
+.table-empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 8px; white-space: nowrap;
+}
+.badge-active { background: rgba(35,165,90,.2); color: #3FD17B; }
+.badge-paused { background: rgba(240,178,50,.15); color: #F0B232; }
+.badge-draft  { background: rgba(255,255,255,.08); color: var(--text-3); }
+.badge-public  { background: rgba(88,101,242,.15); color: #A5ADFF; }
+.badge-private { background: rgba(237,66,69,.12); color: #F87171; }
+.badge-sent    { background: rgba(35,165,90,.2); color: #3FD17B; }
+.badge-failed  { background: rgba(237,66,69,.15); color: #F87171; }
+.badge-pending { background: rgba(255,255,255,.08); color: var(--text-3); }
+.badge-skipped { background: rgba(240,178,50,.12); color: #F0B232; }
+
+/* ─── FILTERS ─── */
+.filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tb-select, .tb-input {
+  height: 34px; padding: 0 12px; background: var(--bg-main);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+  color: var(--text-1); font-size: 13px; outline: none; cursor: pointer;
+}
+.tb-select option, .tb-input { background: var(--bg-card); }
+.tb-input { cursor: text; }
+.tb-input:focus, .tb-select:focus { border-color: rgba(88,101,242,.5); }
+
+/* ─── MODAL ─── */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  z-index: 500; display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-mask.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  width: 100%; max-width: 640px; background: var(--bg-sidebar);
+  border-radius: 14px; max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,.7); border: 1px solid rgba(255,255,255,.08);
+}
+.modal-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid rgba(255,255,255,.07);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text-1); }
+.modal-close {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.06); border: none; border-radius: 6px;
+  color: var(--text-2); cursor: pointer; font-size: 16px; transition: background var(--transition);
+}
+.modal-close:hover { background: rgba(237,66,69,.2); color: var(--red); }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.modal-footer {
+  padding: 16px 24px; border-top: 1px solid rgba(255,255,255,.07);
+  display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0;
+}
+
+/* ─── FORM ─── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: .3px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--bg-main);
+  border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
+  color: var(--text-1); font-size: 14px; outline: none;
+  transition: border-color var(--transition);
+}
+.form-input, .form-select { height: 40px; padding: 0 12px; }
+.form-select option { background: var(--bg-card); }
+.form-textarea { padding: 10px 12px; resize: vertical; min-height: 80px; font-family: inherit; line-height: 1.5; }
+.form-textarea.mono { font-family: "SF Mono","Fira Code",monospace; font-size: 12px; min-height: 100px; }
+.form-textarea.large { min-height: 140px; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(88,101,242,.6); }
+.form-hint { font-size: 11px; color: var(--text-3); }
+
+/* ─── TOAST ─── */
+.toast-wrap {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 10px; z-index: 1000;
+  pointer-events: none;
+}
+.toast {
+  padding: 12px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  animation: toastIn .25s ease; pointer-events: all;
+}
+.toast-success { background: rgba(35,165,90,.9); color: #fff; }
+.toast-error   { background: rgba(237,66,69,.9);  color: #fff; }
+.toast-info    { background: rgba(88,101,242,.9);  color: #fff; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* ─── TRIGGER RESULT ─── */
+.trigger-result {
+  padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-top: 8px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-2); display: none;
+}
+.trigger-result.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ─── 顶部导航 ─── -->
+<nav class="topnav">
+  <div class="topnav-brand">
+    🛰️ 情报订阅站
+  </div>
+  <span class="topnav-badge">Admin</span>
+  <div class="topnav-spacer"></div>
+  <span style="font-size:12px;color:var(--text-3)" id="serverTime"></span>
+</nav>
+
+<!-- ─── 标签页 ─── -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('channels')">频道管理</button>
+  <button class="tab-btn" onclick="switchTab('users')">用户管理</button>
+  <button class="tab-btn" onclick="switchTab('subscriptions')">订阅审批</button>
+  <button class="tab-btn" onclick="switchTab('chanreqs')">需求申请</button>
+  <button class="tab-btn" onclick="switchTab('pushlogs')">推送日志</button>
+</div>
+
+<!-- ─── 主内容 ─── -->
+<div class="main-body">
+
+  <!-- 频道管理 -->
+  <div class="tab-panel active" id="panel-channels">
+    <div class="section-card">
+      <div class="section-toolbar">
+        <span class="toolbar-title">频道列表</span>
+        <div class="filter-row">
+          <select class="tb-select" id="filterStatus" onchange="loadChannels()">
+            <option value="">全部状态</option>
+            <option value="ACTIVE">启用</option>
+            <option value="PAUSED">暂停</option>
+            <option value="DRAFT">草稿</option>
+          </select>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-pipeline" id="btnAllPipeline" onclick="triggerAllPipeline(this)">🚀 触发今日完整推送</button>
+        <button class="btn btn-primary" onclick="openChannelModal()">+ 新建频道</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>类型</th>
+              <th>状态</th>
+              <th>采集频率</th>
+              <th>采集规则</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="channelTableBody">
+            <tr><td colspan="7" class="table-empty">
+              <div class="table-empty-icon">📡</div>
+              <div>加载中...</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户管理 P2-H05 -->
+  <div class="tab-panel" id="panel-users">
+    <div class="section-card">
+      <div class="section-toolbar">
+        <span class="toolbar-title">用户列表</span>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadUsers()">刷新</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>邮箱</th>
+              <th>角色</th>
+              <th>状态</th>
+              <th>订阅数</th>
+              <th>注册时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="6" class="table-empty">
+              <div class="table-empty-icon">👥</div>
+              <div>加载中...</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 订阅审批 P2-I03 -->
+  <div class="tab-panel" id="panel-subscriptions">
+    <div class="section-card">
+      <div class="section-toolbar">
+        <span class="toolbar-title">订阅审批</span>
+        <div class="filter-row">
+          <select class="tb-select" id="filterSubStatus" onchange="loadSubscriptions()">
+            <option value="PENDING">待审批</option>
+            <option value="">全部</option>
+            <option value="ACTIVE">已通过</option>
+            <option value="REJECTED">已拒绝</option>
+            <option value="PAUSED">已暂停</option>
+          </select>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadSubscriptions()">刷新</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>用户邮箱</th>
+              <th>频道</th>
+              <th>申请理由</th>
+              <th>自定义Prompt</th>
+              <th>状态</th>
+              <th>申请时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="subTableBody">
+            <tr><td colspan="7" class="table-empty">
+              <div class="table-empty-icon">📬</div>
+              <div>加载中...</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 推送日志 -->
+  <div class="tab-panel" id="panel-pushlogs">
+    <div class="section-card">
+      <div class="section-toolbar">
+        <span class="toolbar-title">推送日志</span>
+        <div class="filter-row">
+          <input type="date" class="tb-input" id="filterDate" onchange="loadPushLogs()">
+          <select class="tb-select" id="filterLogStatus" onchange="loadPushLogs()">
+            <option value="">全部状态</option>
+            <option value="SENT">已发送</option>
+            <option value="FAILED">失败</option>
+            <option value="PENDING">待发送</option>
+            <option value="SKIPPED">跳过</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="clearLogFilter()">重置</button>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadPushLogs()">刷新</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>报告日期</th>
+              <th>推送渠道</th>
+              <th>状态</th>
+              <th>发送时间</th>
+              <th>错误信息</th>
+              <th>创建时间</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="6" class="table-empty">
+              <div class="table-empty-icon">📋</div>
+              <div>暂无数据，请先选择日期或刷新</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 需求申请 -->
+  <div class="tab-panel" id="panel-chanreqs">
+    <div class="section-card">
+      <div class="section-toolbar">
+        <span class="toolbar-title">频道需求申请</span>
+        <div class="filter-row">
+          <select class="tb-select" id="filterChanReqStatus" onchange="loadChanReqs()">
+            <option value="PENDING">待处理</option>
+            <option value="">全部</option>
+            <option value="REVIEWING">审核中</option>
+            <option value="APPROVED">已批准</option>
+            <option value="REJECTED">已拒绝</option>
+          </select>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadChanReqs()">刷新</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>用户邮箱</th>
+              <th>需求标题</th>
+              <th>内容类型</th>
+              <th>来源线索</th>
+              <th>提交时间</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="chanReqTableBody">
+            <tr><td colspan="7" class="table-empty">
+              <div class="table-empty-icon">📥</div>
+              <div>加载中...</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-body -->
+
+<!-- ─── 频道编辑模态框 ─── -->
+<div class="modal-mask" id="channelModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">新建频道</span>
+      <button class="modal-close" onclick="closeChannelModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editChannelId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">频道名称 *</label>
+          <input class="form-input" id="fieldName" placeholder="如：出海情报 / 竞品监控">
+        </div>
+        <div class="form-group">
+          <label class="form-label">描述</label>
+          <input class="form-input" id="fieldDesc" placeholder="简短描述">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">类型</label>
+          <select class="form-select" id="fieldType">
+            <option value="PUBLIC">PUBLIC（公开）</option>
+            <option value="PRIVATE">PRIVATE（私有）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-select" id="fieldStatus">
+            <option value="DRAFT">DRAFT（草稿）</option>
+            <option value="ACTIVE">ACTIVE（启用）</option>
+            <option value="PAUSED">PAUSED（暂停）</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">采集频率（Cron 表达式）</label>
+        <input class="form-input" id="fieldFreq" placeholder="0 2 * * * (每日 02:00)">
+        <span class="form-hint">标准 Cron 格式，时区 Asia/Shanghai</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">采集规则（JSON）</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillRuleTemplate('rss')">RSS</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillRuleTemplate('apk')">APK监控</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillRuleTemplate('scrape')">网页抓取</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillRuleTemplate('other')">其他</button>
+        </div>
+        <textarea class="form-textarea mono" id="fieldRule" rows="5" placeholder='{"type":"rss","urls":["https://example.com/feed.xml"]}'></textarea>
+        <span class="form-hint">类型：rss（RSS链接）/ apk（APK监控）/ scrape（网页抓取，支持 html 选择器和 json 接口两种 target 模式）/ other<br>点击上方按钮快速填入模板</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">默认 Prompt（AI 处理关注重点）</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillPromptTemplate('general')">📋 通用模板</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="fillPromptTemplate('competitor')">🔍 竞品追踪模板</button>
+        </div>
+        <textarea class="form-textarea large" id="fieldPrompt" rows="5" placeholder="留空则只使用系统标准输出格式。填写后作为「关注重点」附加，如「重点关注广告变现策略变化」..."></textarea>
+        <span class="form-hint">系统已内置结构化输出格式（摘要+原文链接），此处只需填写频道关注重点</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeChannelModal()">取消</button>
+      <button class="btn btn-primary" id="saveChannelBtn" onclick="saveChannel()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 需求申请详情模态框 ─── -->
+<div class="modal-mask" id="chanReqDetailModal">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="chanReqDetailTitle">需求详情</span>
+      <button class="modal-close" onclick="closeChanReqDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" id="chanReqDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeChanReqDetailModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 需求申请批准模态框 ─── -->
+<div class="modal-mask" id="chanReqApproveModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <span class="modal-title">批准需求申请</span>
+      <button class="modal-close" onclick="closeChanReqApproveModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">关联已创建的频道 ID（可选）</label>
+        <input class="form-input" id="approveChannelId" placeholder="留空则仅标记为已批准，不自动开通订阅">
+        <span class="form-hint">填入频道 ID 后，将自动为用户创建 ACTIVE 订阅</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注（可选）</label>
+        <textarea class="form-textarea" id="approveNote" rows="3" placeholder="向用户说明批准情况..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeChanReqApproveModal()">取消</button>
+      <button class="btn btn-pipeline" onclick="confirmChanReqApprove()">确认批准</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 需求申请拒绝模态框 ─── -->
+<div class="modal-mask" id="chanReqRejectModal">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title">拒绝需求申请</span>
+      <button class="modal-close" onclick="closeChanReqRejectModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">拒绝理由 *</label>
+        <textarea class="form-textarea" id="chanReqRejectNote" rows="4" placeholder="请告知用户拒绝原因..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeChanReqRejectModal()">取消</button>
+      <button class="btn btn-del" onclick="confirmChanReqReject()">确认拒绝</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 拒绝理由模态框 ─── -->
+<div class="modal-mask" id="rejectModal">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title">拒绝申请</span>
+      <button class="modal-close" onclick="closeRejectModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">拒绝理由（可选）</label>
+        <textarea class="form-textarea" id="rejectNote" rows="4" placeholder="告知用户拒绝原因..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeRejectModal()">取消</button>
+      <button class="btn btn-del" onclick="confirmReject()">确认拒绝</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast 容器 ─── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ─── API 工具 ─────────────────────────────────────────────────────────────────
+
+const API_BASE = '/admin/api';
+
+async function api(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.detail || '请求失败');
+  return data;
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+function showToast(msg, type = 'info') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ─── 标签页切换 ───────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const tabs = ['channels', 'users', 'subscriptions', 'chanreqs', 'pushlogs'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+
+  if (tab === 'channels') loadChannels();
+  if (tab === 'users') loadUsers();
+  if (tab === 'subscriptions') loadSubscriptions();
+  if (tab === 'chanreqs') loadChanReqs();
+  if (tab === 'pushlogs') loadPushLogs();
+}
+
+// ─── 状态 Badge ───────────────────────────────────────────────────────────────
+
+function statusBadge(status) {
+  const map = {
+    ACTIVE: ['badge-active', '启用'],
+    PAUSED: ['badge-paused', '暂停'],
+    DRAFT:  ['badge-draft',  '草稿'],
+  };
+  const [cls, label] = map[status] || ['badge-draft', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function typeBadge(type) {
+  const cls = type === 'PRIVATE' ? 'badge-private' : 'badge-public';
+  return `<span class="badge ${cls}">${type}</span>`;
+}
+
+function logStatusBadge(status) {
+  const map = {
+    SENT:    ['badge-sent',    '已发送'],
+    FAILED:  ['badge-failed',  '失败'],
+    PENDING: ['badge-pending', '待发送'],
+    SKIPPED: ['badge-skipped', '跳过'],
+  };
+  const [cls, label] = map[status] || ['badge-pending', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ─── 频道列表 ─────────────────────────────────────────────────────────────────
+
+async function loadChannels() {
+  const tbody = document.getElementById('channelTableBody');
+  try {
+    const { data } = await api('/channels');
+    const status = document.getElementById('filterStatus').value;
+    const filtered = status ? data.filter(c => c.status === status) : data;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">
+        <div class="table-empty-icon">📡</div>
+        <div>暂无频道，点击「新建频道」开始</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(ch => {
+      const ruleType = getRuleType(ch.collectRuleParsed);
+      const createdAt = new Date(ch.createdAt).toLocaleDateString('zh-CN');
+      return `<tr>
+        <td><strong>${escHtml(ch.name)}</strong><br>
+          <span style="font-size:11px;color:var(--text-3)">${escHtml(ch.description || '')}</span></td>
+        <td>${typeBadge(ch.type)}</td>
+        <td>${statusBadge(ch.status)}</td>
+        <td><code style="font-size:11px;color:var(--text-2)">${escHtml(ch.collectFrequency)}</code></td>
+        <td><span style="font-size:11px;color:var(--text-2)">${ruleType}</span></td>
+        <td style="color:var(--text-3);font-size:12px">${createdAt}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-trigger" id="trig-${ch.id}" onclick="triggerCollect('${ch.id}',this)">采集</button>
+            <button class="btn btn-sm btn-pipeline" id="pipe-${ch.id}" onclick="triggerPipeline('${ch.id}',this)">⚡ AI处理+推送</button>
+            <button class="btn btn-sm btn-edit" data-ch="${escHtml(JSON.stringify(ch))}" onclick="openChannelModal(JSON.parse(this.dataset.ch))">编辑</button>
+            <button class="btn btn-sm btn-del" onclick="deleteChannel('${ch.id}','${escHtml(ch.name)}')">删除</button>
+          </div>
+          <div class="trigger-result" id="result-${ch.id}"></div>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showToast('加载频道失败: ' + e.message, 'error');
+  }
+}
+
+function getRuleType(rule) {
+  if (!rule) return '未配置';
+  if (rule.type) {
+    const typeMap = { rss: 'RSS', apk: 'APK监控', scrape: '网页抓取', url_scrape: '网页抓取', other: '其他' };
+    const label = typeMap[rule.type] || rule.type;
+    const count = (rule.urls || rule.packageNames || rule.targets || []).length;
+    return count ? `${label}×${count}` : label;
+  }
+  // 兼容旧格式
+  const parts = [];
+  if (rule.rssUrls?.length) parts.push(`RSS×${rule.rssUrls.length}`);
+  if (rule.packageNames?.length) parts.push(`APK×${rule.packageNames.length}`);
+  return parts.join(' + ') || '空规则';
+}
+
+// ─── 手动触发采集 ─────────────────────────────────────────────────────────────
+
+async function triggerCollect(channelId, btn) {
+  btn.disabled = true;
+  btn.textContent = '采集中...';
+  const resultEl = document.getElementById(`result-${channelId}`);
+  resultEl.classList.remove('show');
+
+  try {
+    const data = await api(`/channels/${channelId}/trigger`, { method: 'POST' });
+    if (data.success) {
+      showToast(`采集完成，新增 ${data.itemCount} 条，耗时 ${data.duration}ms`, 'success');
+      resultEl.innerHTML = `✅ 新增 <strong>${data.itemCount}</strong> 条 · 耗时 ${data.duration}ms`;
+    } else {
+      showToast('采集失败: ' + (data.error || '未知错误'), 'error');
+      resultEl.innerHTML = `❌ ${data.error || '采集失败'}`;
+    }
+    resultEl.classList.add('show');
+  } catch (e) {
+    showToast('采集请求失败: ' + e.message, 'error');
+    resultEl.innerHTML = `❌ ${e.message}`;
+    resultEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '采集';
+  }
+}
+
+// ─── 手动触发完整链路 ─────────────────────────────────────────────────────────
+
+async function triggerPipeline(channelId, btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '处理中...';
+  const resultEl = document.getElementById(`result-${channelId}`);
+  resultEl.classList.remove('show');
+
+  try {
+    const data = await api('/pipeline/run', { method: 'POST', body: { channelId } });
+    const pushLabel = { sent: '已推送', skipped: '跳过(无新内容)', failed: '推送失败' }[data.pushStatus] || data.pushStatus;
+    if (data.success) {
+      showToast(`处理完成 · ${data.channelsProcessed}个频道 · ${data.reportLength}字 · ${pushLabel}`, 'success');
+      resultEl.innerHTML = `⚡ ${data.channelsProcessed}个频道 · ${data.reportLength}字 · ${pushLabel} · ${data.duration}ms`;
+    } else {
+      showToast('处理失败: ' + (data.error || '未知错误'), 'error');
+      resultEl.innerHTML = `❌ ${data.error || '处理失败'}`;
+    }
+    resultEl.classList.add('show');
+  } catch (e) {
+    showToast('请求失败: ' + e.message, 'error');
+    resultEl.innerHTML = `❌ ${e.message}`;
+    resultEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+async function triggerAllPipeline(btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '处理中...';
+
+  try {
+    const data = await api('/pipeline/run', { method: 'POST' });
+    const pushLabel = { sent: '已推送', skipped: '跳过(无新内容)', failed: '推送失败' }[data.pushStatus] || data.pushStatus;
+    if (data.success) {
+      showToast(`全频道处理完成 · ${data.channelsProcessed}个频道 · ${data.reportLength}字 · ${pushLabel}`, 'success');
+    } else {
+      showToast('处理失败: ' + (data.error || '未知错误'), 'error');
+    }
+  } catch (e) {
+    showToast('请求失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+// ─── 频道 Modal ───────────────────────────────────────────────────────────────
+
+function openChannelModal(ch = null) {
+  document.getElementById('modalTitle').textContent = ch ? '编辑频道' : '新建频道';
+  document.getElementById('editChannelId').value = ch?.id || '';
+  document.getElementById('fieldName').value = ch?.name || '';
+  document.getElementById('fieldDesc').value = ch?.description || '';
+  document.getElementById('fieldType').value = ch?.type || 'PUBLIC';
+  document.getElementById('fieldStatus').value = ch?.status || 'DRAFT';
+  document.getElementById('fieldFreq').value = ch?.collectFrequency || '0 2 * * *';
+  document.getElementById('fieldRule').value = ch?.collectRule
+    ? JSON.stringify(JSON.parse(ch.collectRule), null, 2)
+    : RULE_TEMPLATES.rss;
+  document.getElementById('fieldPrompt').value = ch?.defaultPrompt || '';
+  document.getElementById('channelModal').classList.add('open');
+}
+
+function closeChannelModal() {
+  document.getElementById('channelModal').classList.remove('open');
+}
+
+const PROMPT_TEMPLATES = {
+  general: `【输出格式】每条情报：### 标题 → 摘要：… → 原文：（链接字段 URL）→ 时间：YYYY-MM-DD，块间用 --- 分隔
+
+关注重点：政策变化、产品功能更新、重要数据/趋势、对开发者的直接影响
+过滤掉：无实质内容的宣传文章、招聘信息、赞助内容`,
+  competitor: `【输出格式】每条情报：### 标题 → 摘要：… → 原文：（链接字段 URL）→ 时间：YYYY-MM-DD，块间用 --- 分隔
+
+关注重点：新功能发布、SDK变化、权限变更、广告策略调整、版本号变化
+重点分析：这次更新对竞争格局有什么影响？`,
+};
+
+function fillPromptTemplate(type) {
+  const template = PROMPT_TEMPLATES[type];
+  if (!template) return;
+  const el = document.getElementById('fieldPrompt');
+  el.value = template;
+  el.focus();
+}
+
+const RULE_TEMPLATES = {
+  rss: `{
+  "type": "rss",
+  "urls": [
+    "https://example.com/feed.xml"
+  ]
+}`,
+  apk: `{
+  "type": "apk",
+  "packageNames": [
+    "com.example.app"
+  ]
+}`,
+  scrape: `{
+  "type": "scrape",
+  "targets": [
+    {
+      "url": "https://example.com/news/",
+      "source": "来源名称",
+      "listSelector": "a.news-item",
+      "titleSelector": "h2.title",
+      "contentSelector": "p.desc",
+      "dateSelector": ".time",
+      "maxPages": 3,
+      "maxAgeHours": 24
+    },
+    {
+      "url": "https://example.com/api/articles",
+      "source": "JSON接口来源",
+      "mode": "json",
+      "method": "POST",
+      "body": "pn=1",
+      "pageBodyTemplate": "pn={page}",
+      "maxPages": 3,
+      "listPath": "data.list",
+      "titleField": "title",
+      "linkField": "id",
+      "linkPrefix": "https://example.com/article/",
+      "dateField": "add_time",
+      "maxAgeHours": 24
+    }
+  ]
+}`,
+  other: `{
+  "type": "other",
+  "urls": []
+}`,
+};
+
+function fillRuleTemplate(type) {
+  const template = RULE_TEMPLATES[type];
+  if (!template) return;
+  const el = document.getElementById('fieldRule');
+  el.value = template;
+  el.focus();
+}
+
+async function saveChannel() {
+  const id = document.getElementById('editChannelId').value;
+  const name = document.getElementById('fieldName').value.trim();
+  if (!name) { showToast('频道名称不能为空', 'error'); return; }
+
+  let collectRule;
+  try {
+    const raw = document.getElementById('fieldRule').value.trim();
+    collectRule = raw ? JSON.parse(raw) : {};
+  } catch {
+    showToast('采集规则 JSON 格式不正确', 'error');
+    return;
+  }
+
+  const payload = {
+    name,
+    description: document.getElementById('fieldDesc').value.trim(),
+    type: document.getElementById('fieldType').value,
+    status: document.getElementById('fieldStatus').value,
+    collectFrequency: document.getElementById('fieldFreq').value.trim() || '0 2 * * *',
+    collectRule,
+    defaultPrompt: document.getElementById('fieldPrompt').value.trim() || null,
+  };
+
+  const btn = document.getElementById('saveChannelBtn');
+  btn.disabled = true; btn.textContent = '保存中...';
+
+  try {
+    if (id) {
+      await api(`/channels/${id}`, { method: 'PUT', body: payload });
+      showToast('频道已更新', 'success');
+    } else {
+      await api('/channels', { method: 'POST', body: payload });
+      showToast('频道已创建', 'success');
+    }
+    closeChannelModal();
+    loadChannels();
+  } catch (e) {
+    showToast('保存失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '保存';
+  }
+}
+
+async function deleteChannel(id, name) {
+  if (!confirm(`确认删除频道「${name}」及所有相关日报？此操作不可撤销。`)) return;
+  try {
+    await api(`/channels/${id}`, { method: 'DELETE' });
+    showToast('频道已删除', 'success');
+    loadChannels();
+  } catch (e) {
+    showToast('删除失败: ' + e.message, 'error');
+  }
+}
+
+// ─── 推送日志 ─────────────────────────────────────────────────────────────────
+
+async function loadPushLogs() {
+  const tbody = document.getElementById('logTableBody');
+  const date = document.getElementById('filterDate').value;
+  const status = document.getElementById('filterLogStatus').value;
+
+  const params = new URLSearchParams();
+  if (date) params.set('date', date);
+  if (status) params.set('status', status);
+
+  try {
+    const { data } = await api(`/push-logs?${params}`);
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">
+        <div class="table-empty-icon">📋</div>
+        <div>暂无推送记录</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(log => {
+      const reportDate = new Date(log.reportDate).toLocaleDateString('zh-CN');
+      const sentAt = log.sentAt ? new Date(log.sentAt).toLocaleString('zh-CN') : '—';
+      const createdAt = new Date(log.createdAt).toLocaleString('zh-CN');
+      return `<tr>
+        <td>${reportDate}</td>
+        <td><span class="badge badge-public">${log.channel}</span></td>
+        <td>${logStatusBadge(log.status)}</td>
+        <td style="font-size:12px;color:var(--text-2)">${sentAt}</td>
+        <td style="font-size:12px;color:var(--red);max-width:300px;word-break:break-all">
+          ${log.errorMsg ? escHtml(log.errorMsg) : '—'}</td>
+        <td style="font-size:12px;color:var(--text-3)">${createdAt}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    showToast('加载日志失败: ' + e.message, 'error');
+  }
+}
+
+function clearLogFilter() {
+  document.getElementById('filterDate').value = '';
+  document.getElementById('filterLogStatus').value = '';
+  loadPushLogs();
+}
+
+// ─── 用户管理 (P2-H05) ────────────────────────────────────────────────────────
+
+const ADMIN_TOKEN_KEY = 'admin_jwt_token';
+
+function getAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_KEY) || '';
+}
+
+async function apiAuth(path, options = {}) {
+  const token = getAdminToken();
+  const res = await fetch('/api' + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.detail || '请求失败');
+  return data;
+}
+
+function userStatusBadge(status) {
+  const map = {
+    ACTIVE: ['badge-active', '正常'],
+    SUSPENDED: ['badge-failed', '已停用'],
+  };
+  const [cls, label] = map[status] || ['badge-draft', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function roleBadge(role) {
+  const map = {
+    ADMIN: ['badge-active', 'Admin'],
+    USER: ['badge-public', 'User'],
+    INVITED: ['badge-paused', 'Invited'],
+  };
+  const [cls, label] = map[role] || ['badge-draft', role];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('userTableBody');
+  try {
+    const { data } = await api('/users');
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">
+        <div class="table-empty-icon">👥</div>
+        <div>暂无用户</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(u => {
+      const createdAt = new Date(u.createdAt).toLocaleString('zh-CN');
+      const statusLabel = u.status === 'ACTIVE' ? '停用' : '恢复';
+      const toggleStatus = u.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+      return `<tr>
+        <td><strong>${escHtml(u.email)}</strong>
+          ${u.displayName ? `<br><span style="font-size:11px;color:var(--text-3)">${escHtml(u.displayName)}</span>` : ''}
+        </td>
+        <td>${roleBadge(u.role)}</td>
+        <td>${userStatusBadge(u.status)}</td>
+        <td style="text-align:center">${u._count?.subscriptions ?? 0}</td>
+        <td style="font-size:12px;color:var(--text-3)">${createdAt}</td>
+        <td>
+          <button class="btn btn-sm ${u.status === 'ACTIVE' ? 'btn-del' : 'btn-edit'}"
+            onclick="toggleUserStatus('${u.id}','${toggleStatus}','${escHtml(u.email)}')"
+          >${statusLabel}</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="table-empty" style="color:var(--red)">
+      加载失败: ${escHtml(e.message)}
+    </td></tr>`;
+  }
+}
+
+async function toggleUserStatus(id, newStatus, email) {
+  if (!confirm(`确定要将用户「${email}」状态改为 ${newStatus}？`)) return;
+  try {
+    await api(`/users/${id}/status`, { method: 'PATCH', body: { status: newStatus } });
+    showToast(`用户状态已更新: ${email}`, 'success');
+    loadUsers();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+// ─── 订阅审批 (P2-I03) ───────────────────────────────────────────────────────
+
+function subStatusBadge(status) {
+  const map = {
+    PENDING:    ['badge-pending', '待审批'],
+    REVIEWING:  ['badge-paused', '审核中'],
+    ACTIVE:     ['badge-active', '已通过'],
+    REJECTED:   ['badge-failed', '已拒绝'],
+    PAUSED:     ['badge-paused', '已暂停'],
+  };
+  const [cls, label] = map[status] || ['badge-draft', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+async function loadSubscriptions() {
+  const tbody = document.getElementById('subTableBody');
+  try {
+    const status = document.getElementById('filterSubStatus').value;
+    const query = status ? `?status=${status}` : '';
+    const { data } = await api(`/subscriptions/admin/list${query}`);
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">
+        <div class="table-empty-icon">📬</div>
+        <div>暂无订阅记录</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(s => {
+      const createdAt = new Date(s.createdAt).toLocaleDateString('zh-CN');
+      const hasPrompt = s.customPrompt ? `<span class="badge badge-public" title="${escHtml(s.customPrompt)}">有</span>` : '—';
+      const actions = s.status === 'PENDING' || s.status === 'REVIEWING' ? `
+        <button class="btn btn-sm btn-pipeline" onclick="approveSubscription('${s.id}')">通过</button>
+        <button class="btn btn-sm btn-del" onclick="openRejectModal('${s.id}')">拒绝</button>
+      ` : s.status === 'ACTIVE' ? `
+        <button class="btn btn-sm btn-trigger" onclick="pauseSubscription('${s.id}')">暂停</button>
+      ` : s.status === 'PAUSED' ? `
+        <button class="btn btn-sm btn-edit" onclick="resumeSubscription('${s.id}')">恢复</button>
+      ` : '';
+
+      return `<tr>
+        <td style="font-size:12px">${escHtml(s.user?.email || '—')}</td>
+        <td>${escHtml(s.channel?.name || '—')}</td>
+        <td style="max-width:200px;font-size:12px;color:var(--text-2)">${escHtml(s.applyReason)}</td>
+        <td style="text-align:center">${hasPrompt}</td>
+        <td>${subStatusBadge(s.status)}</td>
+        <td style="font-size:12px;color:var(--text-3)">${createdAt}</td>
+        <td><div style="display:flex;gap:6px">${actions}</div></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty" style="color:var(--red)">
+      加载失败: ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function approveSubscription(id) {
+  if (!confirm('确定通过此订阅申请？')) return;
+  try {
+    await api(`/subscriptions/admin/${id}/approve`, { method: 'PATCH' });
+    showToast('已通过', 'success');
+    loadSubscriptions();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+let rejectingSubId = null;
+
+function openRejectModal(id) {
+  rejectingSubId = id;
+  document.getElementById('rejectNote').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+}
+
+function closeRejectModal() {
+  rejectingSubId = null;
+  document.getElementById('rejectModal').classList.remove('open');
+}
+
+async function confirmReject() {
+  if (!rejectingSubId) return;
+  const adminNote = document.getElementById('rejectNote').value.trim();
+  try {
+    await api(`/subscriptions/admin/${rejectingSubId}/reject`, {
+      method: 'PATCH',
+      body: { adminNote },
+    });
+    showToast('已拒绝', 'info');
+    closeRejectModal();
+    loadSubscriptions();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function pauseSubscription(id) {
+  try {
+    await api(`/subscriptions/admin/${id}/pause`, { method: 'PATCH' });
+    showToast('已暂停', 'info');
+    loadSubscriptions();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+async function resumeSubscription(id) {
+  try {
+    await api(`/subscriptions/admin/${id}/resume`, { method: 'PATCH' });
+    showToast('已恢复', 'success');
+    loadSubscriptions();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+// ─── 需求申请管理 ─────────────────────────────────────────────────────────────
+
+function chanReqStatusBadge(status) {
+  const map = {
+    PENDING:   ['badge-pending', '待处理'],
+    REVIEWING: ['badge-paused', '审核中'],
+    APPROVED:  ['badge-active', '已批准'],
+    REJECTED:  ['badge-failed', '已拒绝'],
+  };
+  const [cls, label] = map[status] || ['badge-draft', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function contentTypeBadge(ct) {
+  const colors = { RSS:'badge-public', APK:'badge-private', WEBSITE:'badge-public',
+                   RANKING:'badge-paused', AD:'badge-failed', SOCIAL:'badge-active', OTHER:'badge-draft' };
+  return `<span class="badge ${colors[ct] || 'badge-draft'}">${ct}</span>`;
+}
+
+async function loadChanReqs() {
+  const tbody = document.getElementById('chanReqTableBody');
+  try {
+    const status = document.getElementById('filterChanReqStatus').value;
+    const query = status ? `?status=${status}` : '';
+    const { data } = await api('/channel-requests/admin/list' + query);
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">
+        <div class="table-empty-icon">📥</div>
+        <div>暂无需求申请</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => {
+      const createdAt = new Date(r.createdAt).toLocaleDateString('zh-CN');
+      const actions = (r.status === 'PENDING' || r.status === 'REVIEWING') ? `
+        <button class="btn btn-sm btn-pipeline" onclick="openChanReqApproveModal('${r.id}')">批准</button>
+        <button class="btn btn-sm btn-del" onclick="openChanReqRejectModal('${r.id}')">拒绝</button>
+      ` : '';
+      const detailData = escHtml(JSON.stringify(r));
+      return `<tr style="cursor:pointer" onclick="openChanReqDetailModal(${detailData})">
+        <td style="font-size:12px">${escHtml(r.user?.email || '—')}</td>
+        <td><strong>${escHtml(r.title)}</strong></td>
+        <td>${contentTypeBadge(r.contentType)}</td>
+        <td style="font-size:12px;color:var(--text-2)">${escHtml(r.sourceHint || '—')}</td>
+        <td style="font-size:12px;color:var(--text-3)">${createdAt}</td>
+        <td>${chanReqStatusBadge(r.status)}</td>
+        <td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">${actions}</div></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty" style="color:var(--red)">
+      加载失败: ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function openChanReqDetailModal(r) {
+  document.getElementById('chanReqDetailTitle').textContent = r.title || '需求详情';
+  document.getElementById('chanReqDetailBody').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">用户</label>
+      <div style="color:var(--text-1);font-size:13px">${escHtml(r.user?.email || '—')}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">内容类型</label>
+      <div>${contentTypeBadge(r.contentType)}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">详细描述</label>
+      <div style="color:var(--text-1);font-size:13px;white-space:pre-wrap;background:var(--bg-3);padding:10px;border-radius:6px">${escHtml(r.description)}</div>
+    </div>
+    ${r.sourceHint ? `<div class="form-group">
+      <label class="form-label">来源线索</label>
+      <div style="color:var(--text-2);font-size:13px">${escHtml(r.sourceHint)}</div>
+    </div>` : ''}
+    ${r.customPrompt ? `<div class="form-group">
+      <label class="form-label">自定义 Prompt</label>
+      <div style="color:var(--text-2);font-size:12px;font-family:monospace;white-space:pre-wrap;background:var(--bg-3);padding:10px;border-radius:6px">${escHtml(r.customPrompt)}</div>
+    </div>` : ''}
+    ${r.adminNote ? `<div class="form-group">
+      <label class="form-label">管理员备注</label>
+      <div style="color:var(--text-2);font-size:13px">${escHtml(r.adminNote)}</div>
+    </div>` : ''}
+    <div class="form-group">
+      <label class="form-label">状态</label>
+      <div>${chanReqStatusBadge(r.status)}</div>
+    </div>
+  `;
+  document.getElementById('chanReqDetailModal').classList.add('open');
+}
+
+function closeChanReqDetailModal() {
+  document.getElementById('chanReqDetailModal').classList.remove('open');
+}
+
+let approvingChanReqId = null;
+
+function openChanReqApproveModal(id) {
+  approvingChanReqId = id;
+  document.getElementById('approveChannelId').value = '';
+  document.getElementById('approveNote').value = '';
+  document.getElementById('chanReqApproveModal').classList.add('open');
+}
+
+function closeChanReqApproveModal() {
+  approvingChanReqId = null;
+  document.getElementById('chanReqApproveModal').classList.remove('open');
+}
+
+async function confirmChanReqApprove() {
+  if (!approvingChanReqId) return;
+  const channelId = document.getElementById('approveChannelId').value.trim();
+  const adminNote = document.getElementById('approveNote').value.trim();
+  try {
+    await api(`/channel-requests/admin/${approvingChanReqId}/approve`, {
+      method: 'PATCH',
+      body: { adminNote: adminNote || undefined, channelId: channelId || undefined },
+    });
+    showToast('需求已批准' + (channelId ? '，订阅已自动开通' : ''), 'success');
+    closeChanReqApproveModal();
+    loadChanReqs();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+let rejectingChanReqId = null;
+
+function openChanReqRejectModal(id) {
+  rejectingChanReqId = id;
+  document.getElementById('chanReqRejectNote').value = '';
+  document.getElementById('chanReqRejectModal').classList.add('open');
+}
+
+function closeChanReqRejectModal() {
+  rejectingChanReqId = null;
+  document.getElementById('chanReqRejectModal').classList.remove('open');
+}
+
+async function confirmChanReqReject() {
+  if (!rejectingChanReqId) return;
+  const adminNote = document.getElementById('chanReqRejectNote').value.trim();
+  if (!adminNote) { showToast('请填写拒绝理由', 'error'); return; }
+  try {
+    await api(`/channel-requests/admin/${rejectingChanReqId}/reject`, {
+      method: 'PATCH',
+      body: { adminNote },
+    });
+    showToast('已拒绝', 'info');
+    closeChanReqRejectModal();
+    loadChanReqs();
+  } catch (e) {
+    showToast('操作失败: ' + e.message, 'error');
+  }
+}
+
+// ─── 工具函数 ─────────────────────────────────────────────────────────────────
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// 点击遮罩关闭 modal
+document.getElementById('channelModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChannelModal();
+});
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRejectModal();
+});
+document.getElementById('chanReqDetailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChanReqDetailModal();
+});
+document.getElementById('chanReqApproveModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChanReqApproveModal();
+});
+document.getElementById('chanReqRejectModal').addEventListener('click', function(e) {
+  if (e.target === this) closeChanReqRejectModal();
+});
+
+// 服务器时间显示
+function updateTime() {
+  document.getElementById('serverTime').textContent = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// 初始加载
+loadChannels();
+</script>
+</body>
+</html>

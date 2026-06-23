@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  # ─── 后端服务（Express + Prisma + SQLite）──────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: intel-hub-backend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/intel-hub.db
+    volumes:
+      - ./prisma/data:/app/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - intel-hub-net
+
+  # ─── Web 用户端（Next.js，端口 3001）──────────────────────────────────────
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: intel-hub-web
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - NEXT_PUBLIC_API_BASE=http://backend:3000
+      - DOCKER_BUILD=true
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - intel-hub-net
+
+networks:
+  intel-hub-net:
+    driver: bridge

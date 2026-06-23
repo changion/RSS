@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+:root {
+  --lark-bg: #EFF0F1;
+  --lark-sidebar: #FAFBFC;
+  --lark-surface: #FFFFFF;
+  --lark-primary: #1F2329;
+  --lark-secondary: #646A73;
+  --lark-muted: #8F959E;
+  --lark-border: #DEE0E3;
+  --lark-accent: #3370FF;
+  --lark-accent-hover: #245BDB;
+  --lark-accent-light: #E1EAFF;
+  --lark-accent-soft: #EDF3FF;
+  --lark-input-bg: #F5F6F7;
+  --background: var(--lark-bg);
+  --foreground: var(--lark-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-lark-bg: #EFF0F1;
+  --color-lark-sidebar: #FAFBFC;
+  --color-lark-surface: #FFFFFF;
+  --color-lark-primary: #1F2329;
+  --color-lark-secondary: #646A73;
+  --color-lark-muted: #8F959E;
+  --color-lark-border: #DEE0E3;
+  --color-lark-accent: #3370FF;
+  --color-lark-accent-hover: #245BDB;
+  --color-lark-accent-light: #E1EAFF;
+  --color-lark-accent-soft: #EDF3FF;
+  --color-lark-input: #F5F6F7;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-lark: 0.625rem;
+  --radius-lark-lg: 0.75rem;
+  --radius-lark-xl: 1rem;
+  --shadow-lark-sm: 0 1px 2px 0 rgb(31 35 41 / 0.05), 0 1px 3px 0 rgb(31 35 41 / 0.04);
+  --shadow-lark-md: 0 4px 12px 0 rgb(31 35 41 / 0.08), 0 2px 4px -2px rgb(31 35 41 / 0.04);
+  --shadow-lark-lg: 0 12px 32px 0 rgb(31 35 41 / 0.12), 0 4px 8px -4px rgb(31 35 41 / 0.06);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 共享组件样式 ── */
+
+.lark-card {
+  background: var(--lark-surface);
+  border-radius: var(--radius-lark-lg);
+  box-shadow: var(--shadow-lark-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.lark-card-hover:hover {
+  box-shadow: var(--shadow-lark-md);
+  transform: translateY(-1px);
+}
+
+.lark-input {
+  width: 100%;
+  background: var(--lark-input-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lark);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--lark-primary);
+  transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.lark-input::placeholder {
+  color: var(--lark-muted);
+}
+
+.lark-input:focus {
+  outline: none;
+  background: var(--lark-surface);
+  border-color: rgb(51 112 255 / 0.35);
+  box-shadow: 0 0 0 3px rgb(51 112 255 / 0.12);
+}
+
+.lark-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lark-accent);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lark);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lark-btn-primary:hover:not(:disabled) {
+  background: var(--lark-accent-hover);
+  box-shadow: var(--shadow-lark-sm);
+}
+
+.lark-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lark-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lark-input-bg);
+  color: var(--lark-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lark);
+  transition: background 0.15s ease;
+}
+
+.lark-btn-secondary:hover:not(:disabled) {
+  background: #EBECED;
+}
+
+.lark-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lark-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--lark-secondary);
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-lark);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lark-btn-ghost:hover:not(:disabled) {
+  background: var(--lark-input-bg);
+  color: var(--lark-primary);
+}
+
+.lark-nav-active {
+  background: var(--lark-accent-light);
+  color: var(--lark-accent);
+  font-weight: 500;
+}
+
+.lark-page-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--lark-primary);
+  line-height: 1.4;
+}
+
+.lark-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--lark-primary);
+}
+
+.lark-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--lark-surface);
+  box-shadow: var(--shadow-lark-sm);
+}
