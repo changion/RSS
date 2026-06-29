@@ -1,5 +1,9 @@
 # intel-hub 版本变更记录
 
+## v2.3.4（build 9）｜2026-06-23 ［开发中］
+
+- [性能] web/next.config.ts 增加 turbopack.root 锁定监听根目录为 web/，避免 Turbopack 监听上层后端 node_modules，修复本地启动内存暴涨致系统卡死
+
 ## v2.3.3（build 8）｜2026-06-12 ［开发中］
 
 - [功能] Web UI 视觉重设计 v2：阴影分层卡片、飞书蓝选中态、情报条目独立卡片，去除线框风格
